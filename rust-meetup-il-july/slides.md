@@ -19,7 +19,7 @@ authorUrl: https://github.com/aviramha/
 hideInToc: ture
 ---
 
-# Microdosing Rust <mdi-language-rust/> at your workplace
+# Microdosing Rust <mdi-language-rust/> at Your Workplace
 
 How to start using Rust at your workplace at ease 🦀
 
@@ -48,6 +48,7 @@ Past - Backend Team Leader @ Biocatch, Solution Architect @ SAM, IDF
 - Why would you want to use Rust
 - Why is it hard to introduce Rust to your workplace
 - Microservices?
+- Real life experience
 - Native Extensions
     - PyO3
     - napi-rs
@@ -62,10 +63,11 @@ Past - Backend Team Leader @ Biocatch, Solution Architect @ SAM, IDF
 
 <v-clicks>
 
-- Love 😍 🥰
+
 - Safety 🔒
 - Performance 💪
-- Commmunity 🌐
+- Community 🌐
+- Love 😍 🥰
 
 </v-clicks>
 
@@ -73,12 +75,26 @@ Past - Backend Team Leader @ Biocatch, Solution Architect @ SAM, IDF
 Talk about how choosing a language is many times based on preference and not neccesarily objective decision.
 Point the objective benefits of the language.
 -->
----
-layout: center
-class: text-center
+
 ---
 
-# Let's RWIR! 🚧
+# Challenges
+
+- Team needs to learn the language
+  - Rust has a steep learning curve
+  - Functional programming isn't mainstream
+- Continuing to deliver value
+  - Business values > technical stack
+  - Can't spend too much time on refactoring and breaking
+
+---
+
+layout: center
+class: text-centre
+
+---
+
+# Let's RWIR*! 🚧
 
 Microservices - I can re-write only one service at a time using Rust!
 
@@ -86,6 +102,7 @@ Microservices - I can re-write only one service at a time using Rust!
 <img src="/simply.jpg" style="height: 60%; width: 50%; margin-left: auto; margin-right: auto;" class="center"/>
 </v-click>
 
+*Rewrite it in Rust
 <!--
 Talk about the assumption that microservices help you introduce Rust. It does help, but a good microservice architecture will have very similar infrastructure used across the microservices.
 -->
@@ -94,9 +111,9 @@ Talk about the assumption that microservices help you introduce Rust. It does he
 # Microservices, no? 😌
 
 Lets take the "average", bare minimum microservice requirements for production:
-- Logging 🗒
+- Logging 🗒 - https://github.com/rust-lang/log/blob/master/rfcs/0296-structured-logging.md
 - Tracing 🕵️‍♀️
-- Monitoring 📈
+- Metrics 📈
 
 <!--
 Those are the bare minimum for a real production service, and each one can be implemented very differently across frameworks:
@@ -109,7 +126,7 @@ and some of the implementation are different, for example using structured loggi
 ---
 
 
-# Let's sizzle it a bit 🔥
+# Let's take it a step further 🤓
 
 Those were **just bare minimum** requirements for production. Without actual logic!
 Few examples of more dependencies:
@@ -177,6 +194,7 @@ $ python
 >>> string_sum.sum_as_string(5, 20)
 '25'
 ```
+
 
 ---
 
@@ -252,6 +270,18 @@ maturin publish
 
 --- 
 
+# PyO3 - Case Study @ BioCatch
+
+<v-clicks>
+
+- Start very small - rfernet
+- Go a bit bigger - ormsgpack
+- And even bigger - data processor/encoder/decoder
+
+</v-clicks>
+
+---
+
 # NAPI!
 >Node-API (formerly N-API) is an API for building native Addons.[^4]
 
@@ -281,6 +311,7 @@ console.log(fibonacci(5))
 
 # NAPI - Example libraries
 
+- [Polars](https://github.com/pola-rs/polars)
 - [next-swc - Next speedy web compiler](https://github.com/vercel/next.js/tree/canary/packages/next-swc)
 - [ElectronMail](https://github.com/vladimiry/ElectronMail/blob/master/src/electron-main/database/serialization/compression-native/Cargo.toml) - created a compression library
 - [fnapi](https://github.com/fnapi/fnapi)
@@ -293,12 +324,15 @@ console.log(fibonacci(5))
 
 [^5]: https://neon-bindings.com/
 
+
 ---
 class: 'text-center'
 layout: center
 ---
 
 # Closing notes
+
+- Happy to help - aviram@metalbear.co
 
 ---
 class: 'text-center'
