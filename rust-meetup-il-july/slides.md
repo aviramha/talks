@@ -89,10 +89,6 @@ Point the objective benefits of the language.
 
 ---
 
-layout: center
-class: text-centre
-
----
 
 # Let's RWIR*! 🚧
 
@@ -314,7 +310,6 @@ console.log(fibonacci(5))
 - [Polars](https://github.com/pola-rs/polars)
 - [next-swc - Next speedy web compiler](https://github.com/vercel/next.js/tree/canary/packages/next-swc)
 - [ElectronMail](https://github.com/vladimiry/ElectronMail/blob/master/src/electron-main/database/serialization/compression-native/Cargo.toml) - created a compression library
-- [fnapi](https://github.com/fnapi/fnapi)
 
 ---
 
