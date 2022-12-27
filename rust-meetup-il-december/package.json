@@ -1,0 +1,19 @@
+{
+  "name": "advanced-rust",
+  "private": true,
+  "scripts": {
+    "build": "slidev build",
+    "dev": "slidev --open",
+    "export": "slidev export"
+  },
+  "dependencies": {
+    "@mdi/js": "^6.7.96",
+    "@slidev/cli": "^0.33.0",
+    "@slidev/theme-default": "*",
+    "@slidev/theme-seriph": "*",
+    "slidev-theme-academic": "^1.1.0"
+  },
+  "devDependencies": {
+    "@iconify-json/mdi": "^1.1.22"
+  }
+}
