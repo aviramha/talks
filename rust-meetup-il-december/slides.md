@@ -36,6 +36,19 @@ I am CEO of [MetalBear](https://metalbear.co)
 
 Currently working on [mirrord.dev](https://mirrord.dev)
 
+---
+
+# What are we going to talk about?
+
+- This presentation is to showcase a bit of advanced, low level features of Rust.
+- Rust is usually viewed as a safe haven for low level engineers, but usually they don't get too low.
+- This presentation is going to take us deep ;)
+- We'll use the open source of mirrord as examples!
+
+<!--
+
+-->
+
 
 ---
 
@@ -54,26 +67,13 @@ Currently working on [mirrord.dev](https://mirrord.dev)
 
 </v-clicks>
 
-
 ---
 
-# What are we going to talk about?
-
-- This presentation is to showcase a bit of advanced, low level features of Rust.
-- Rust is usually viewed as a safe haven for low level engineers, but usually they don't get too low.
-- This presentation is going to take us deep ;)
-- We'll use the open source of mirrord as examples!
-
-<!--
-
--->
-
----
 
 # Quick Infomercial 📺
 
 - mirrord lets backend engineers run their service locally in the context of the remote cluster.
-- It is similar to sandbox/development environment but it is completely user mode and not a VM.
+- It is similar to sandbox but it is completely user mode and not a VM.
 - It is a Rust application that uses a lot of low level features of Rust.
 
 ---
@@ -100,6 +100,7 @@ Maybe talk about SEH/try except that would be a good example of how I viewed uns
 - Syscalls are the way to call the kernel from user mode.
 - They are the only way to do things like file IO, network IO, etc.
 - Syscalls are usually done by calling the `syscall` instruction.
+- Most applications use libc as a wrapper to do syscalls.
 
 ---
 
@@ -224,8 +225,8 @@ pub(super) unsafe extern "C" fn open_detour(
 # Naked
 
 - Naked functions are functions that don't have a prologue and epilogue.
-- This means that we have to manually push/pop registers and adjust the stack pointer.
-- This is useful when we want to write assembly code in Rust.
+- This means that we have to manually manage the registers and stack.
+- The prologue/epilogue are usually done by the compiler to match the ABI.
 
 
 --- 
@@ -282,6 +283,11 @@ unsafe extern "C" fn go_raw_syscall_detour() {
     );
 }
 
+```
+
+--- 
+
+```rs
 #[no_mangle]
 unsafe extern "C" fn c_abi_syscall_handler(
     syscall: i64,
@@ -302,6 +308,20 @@ unsafe extern "C" fn c_abi_syscall_handler(
 
 ```
 
+---
+
+# We used all dark features in 2 snippets!
+
+
+- syscalls
+- unsafe
+- extern
+- ABI
+- Naked
+- ffi
+- trampoline
+- TLS (not the protocol!)
+
 
 ---
 class: 'text-center'
@@ -311,4 +331,4 @@ layout: center
 # Questions
 
 - Available at aviram@metalbear.co
-- aviramyh - @Twitter
+- @aviramyh - Twitter
