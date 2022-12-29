@@ -40,7 +40,7 @@ Currently working on [mirrord.dev](https://mirrord.dev)
 
 # What are we going to talk about?
 
-- This presentation is to showcase a bit of advanced, low level features of Rust.
+- This presentation is to showcase some advanced, low level features of Rust.
 - Rust is usually viewed as a safe haven for low level engineers, but usually they don't get too low.
 - This presentation is going to take us deep ;)
 - We'll use the open source of mirrord as examples!
@@ -61,7 +61,7 @@ Currently working on [mirrord.dev](https://mirrord.dev)
 - extern
 - ABI
 - Naked
-- ffi
+- FFI
 - trampoline
 - TLS (not the protocol!)
 
@@ -74,10 +74,10 @@ Currently working on [mirrord.dev](https://mirrord.dev)
 
 - mirrord lets backend engineers run their service locally in the context of the remote cluster.
 - We're going to focus on the "layer" (so/dylib) component of mirrord.
+- mirrord-layer is injected into the users' process(es)
 - It is similar to sandbox but it is completely user mode and not a VM.
-- In order to acheive that, we hook libc functions that wrap syscalls and 
+- In order to achieve that, we hook libc functions that wrap syscalls and 
     decide what happens locally and what happens remote.
-- mirrord-layer is loaded into the processes and implements this logic.
 
 ---
 
@@ -87,7 +87,7 @@ Currently working on [mirrord.dev](https://mirrord.dev)
 - Syscalls are the way to call the kernel from user mode.
 - They are the only way to do things like file IO, network IO, etc.
 - Syscalls are usually done by calling the `syscall` instruction.
-- Most applications use libc as a wrapper to do syscalls.
+- Most languages/frameworks use libc as a wrapper to do syscalls.
 
 ---
 
@@ -96,38 +96,42 @@ Currently working on [mirrord.dev](https://mirrord.dev)
 - First we need mirrord-layer to run when loaded as so/dylib, without the original process or anyone else calling us
 - ctor to the rescue
 
+
 ```rs
 /// The one true start of mirrord-layer.
 #[ctor]
 fn mirrord_layer_entry_point() {
-    // If we try to use `#[cfg(not(test))]`, it gives a bunch of unused warnings, unless you specify
-    // a profile, for example `cargo check --profile=dev`.
-    if !cfg!(test) {
-        let _ = panic::catch_unwind(|| {
-            if let Err(fail) = layer_pre_initialization() {
-                match fail {
-                    LayerError::NoProcessFound => (),
-                    _ => {
-                        eprintln!("mirrord layer setup failed with {:?}", fail);
-                        std::process::exit(-1)
-                    }
-                }
-            }
-        });
-    }
+    start()
 }
 ```
+
+<div v-click>
+
+```rs
+/// The one true start of mirrord-layer.
+#[ctor]
+fn mirrord_layer_entry_point() {
+    let _ = panic::catch_unwind(|| {
+        if let Err(fail) = layer_pre_initialization() {
+                eprintln!("mirrord layer setup failed with {:?}", fail);
+                std::process::exit(-1)  
+            }
+        }
+    };
+```
+
+</div>
 
 ---
 
 # Initializing++
 
-- We are hooking the relevnat libc functions
+- We are hooking the relevant libc functions
 - Creating a thread (using Tokio) that will run in background and communicate with the agent.
 
 ```rs
 replace!(hook_manager, "open", open_detour, FnOpen, FN_OPEN);
-
+// sum this
 #[macro_export]
 macro_rules! replace {
     ($hook_manager:expr, $func:expr, $detour_function:expr, $detour_type:ty, $hook_fn:expr) => {{
@@ -305,7 +309,7 @@ pub(super) unsafe extern "C" fn open_detour(
 
 ---
 
-# Naked
+# #[naked]
 
 - Naked functions are functions that don't have a prologue and epilogue.
 - This means that we have to manually manage the registers and stack.
@@ -322,24 +326,6 @@ pub(super) unsafe extern "C" fn open_detour(
 - We have to hook Go functions, and Go has has its own ABI.
 - We have to write a trampoline to convert Go ABI to C ABI.
 
-
----
-
-# Finding which Go version is used
-
-```rs
-    if let Some(version_symbol) =
-        hook_manager.resolve_symbol_main_module("runtime.buildVersion.str")
-    {
-        // Version str is `go1.xx` - take only last 4 characters.
-        let version = unsafe {
-            std::str::from_utf8_unchecked(std::slice::from_raw_parts(
-                version_symbol.0.add(2) as *const u8,
-                4,
-            ))
-        };
-    }
-```
 
 ---
 
@@ -396,14 +382,11 @@ unsafe extern "C" fn c_abi_syscall_handler(
 # We used all dark features in few snippets!
 
 
-- syscalls
-- unsafe
-- extern
-- ABI
-- Naked
-- ffi
-- trampoline
-- TLS (not the protocol!)
+- syscalls - we hook those
+- unsafe - everywhere!
+- extern + FFI + ABI = how we call other languages/export to other languages
+- Naked + Trampoline - to convert ABIs
+- TLS - to bypass the hooking mechanism
 
 
 ---
