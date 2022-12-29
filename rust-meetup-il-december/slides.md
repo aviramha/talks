@@ -73,11 +73,106 @@ Currently working on [mirrord.dev](https://mirrord.dev)
 # Quick Infomercial 📺
 
 - mirrord lets backend engineers run their service locally in the context of the remote cluster.
+- We're going to focus on the "layer" (so/dylib) component of mirrord.
 - It is similar to sandbox but it is completely user mode and not a VM.
-- It is a Rust application that uses a lot of low level features of Rust.
+- In order to acheive that, we hook libc functions that wrap syscalls and 
+    decide what happens locally and what happens remote.
+- mirrord-layer is loaded into the processes and implements this logic.
 
 ---
 
+
+# syscalls
+
+- Syscalls are the way to call the kernel from user mode.
+- They are the only way to do things like file IO, network IO, etc.
+- Syscalls are usually done by calling the `syscall` instruction.
+- Most applications use libc as a wrapper to do syscalls.
+
+---
+
+# Initializing..
+
+- First we need mirrord-layer to run when loaded as so/dylib, without the original process or anyone else calling us
+- ctor to the rescue
+
+```rs
+/// The one true start of mirrord-layer.
+#[ctor]
+fn mirrord_layer_entry_point() {
+    // If we try to use `#[cfg(not(test))]`, it gives a bunch of unused warnings, unless you specify
+    // a profile, for example `cargo check --profile=dev`.
+    if !cfg!(test) {
+        let _ = panic::catch_unwind(|| {
+            if let Err(fail) = layer_pre_initialization() {
+                match fail {
+                    LayerError::NoProcessFound => (),
+                    _ => {
+                        eprintln!("mirrord layer setup failed with {:?}", fail);
+                        std::process::exit(-1)
+                    }
+                }
+            }
+        });
+    }
+}
+```
+
+---
+
+# Initializing++
+
+- We are hooking the relevnat libc functions
+- Creating a thread (using Tokio) that will run in background and communicate with the agent.
+
+```rs
+replace!(hook_manager, "open", open_detour, FnOpen, FN_OPEN);
+
+#[macro_export]
+macro_rules! replace {
+    ($hook_manager:expr, $func:expr, $detour_function:expr, $detour_type:ty, $hook_fn:expr) => {{
+        let intercept = |hook_manager: &mut $crate::hooks::HookManager,
+                         symbol_name,
+                         detour: $detour_type|
+         -> $crate::error::Result<$detour_type> {
+            let replaced =
+                hook_manager.hook_export_or_any(symbol_name, detour as *mut libc::c_void)?;
+            let original_fn: $detour_type = std::mem::transmute(replaced);
+
+            tracing::trace!("hooked {symbol_name:?}");
+            Ok(original_fn)
+        };
+
+        let _ = intercept($hook_manager, $func, $detour_function)
+            .and_then(|hooked| Ok($hook_fn.set(hooked).unwrap()));
+    }};
+}
+    
+```
+
+---
+
+# Example hook
+
+```rs
+/// Hook for `libc::open`.
+#[hook_fn]
+pub(super) unsafe extern "C" fn open_detour(
+    raw_path: *const c_char,
+    open_flags: c_int,
+    mut args: ...
+) -> RawFd {
+    let mode: c_int = args.arg();
+    let guard = DetourGuard::new();
+    if guard.is_none() {
+        FN_OPEN(raw_path, open_flags, mode)
+    } else {
+        open_logic(raw_path, open_flags, mode)
+    }
+}
+```
+
+---
 
 # Unsafe
 
@@ -92,15 +187,6 @@ Currently working on [mirrord.dev](https://mirrord.dev)
 <!--
 Maybe talk about SEH/try except that would be a good example of how I viewed unsafe when I first heard about it.
 -->
-
----
-
-# syscalls
-
-- Syscalls are the way to call the kernel from user mode.
-- They are the only way to do things like file IO, network IO, etc.
-- Syscalls are usually done by calling the `syscall` instruction.
-- Most applications use libc as a wrapper to do syscalls.
 
 ---
 
@@ -193,9 +279,6 @@ impl Drop for DetourGuard {
     }
 }
 
-/// Hook for `libc::open`.
-///
-/// **Bypassed** by `raw_path`s that match `IGNORE_FILES` regex.
 #[hook_fn]
 pub(super) unsafe extern "C" fn open_detour(
     raw_path: *const c_char,
@@ -310,7 +393,7 @@ unsafe extern "C" fn c_abi_syscall_handler(
 
 ---
 
-# We used all dark features in 2 snippets!
+# We used all dark features in few snippets!
 
 
 - syscalls
@@ -331,4 +414,5 @@ layout: center
 # Questions
 
 - Available at aviram@metalbear.co
+- https://hachyderm.io/@aviram
 - @aviramyh - Twitter
